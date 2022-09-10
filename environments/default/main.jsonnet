@@ -52,6 +52,30 @@ local make_arr_app(namespace, cfg) = {
 };
 
 // FIXME: Duplicate code
+local make_doplarr(namespace, cfg) = {
+  local _volumes = [
+    volume.fromHostPath(x.name, x.host) + volume.hostPath.withType('Directory')
+    for x in cfg.hostPathMappings
+  ],
+  local _volumeMounts = [
+    volumeMount.new(x.name, x.ctr)
+    for x in cfg.hostPathMappings
+  ],
+  local _containers = [
+    container.new(name=cfg.name, image=cfg.image)
+    + container.securityContext.withAllowPrivilegeEscalation(false)
+    + container.withEnvMap(cfg.env)
+    + container.withEnvFrom(envFromSource.secretRef.withName('doplarr-env'))
+    + container.withVolumeMounts(_volumeMounts),
+  ],
+
+  deployment: deployment.new(name=cfg.name, containers=_containers)
+              + deployment.spec.template.spec.withVolumes(_volumes)
+              + deployment.spec.template.spec.withNodeName('tec')
+              + deployment.metadata.withNamespace(namespace),
+};
+
+// FIXME: Duplicate code
 local make_plex(namespace, cfg) = {
   local _volumes = [
     volume.fromHostPath(x.name, x.host) + volume.hostPath.withType('Directory')
@@ -180,6 +204,18 @@ local make_transmission(namespace, cfg) = {
         { name: 'config', host: '/data/general/config/bazarr', ctr: '/config' },
         { name: 'tv', host: '/data/media/tv', ctr: '/tv' },
         { name: 'movies', host: '/data/media/movies', ctr: '/movies' },
+      ],
+    }),
+
+    doplarr: make_doplarr('media', {
+      name: 'doplarr',
+      image: 'lscr.io/linuxserver/doplarr:latest',
+      env: defaultEnvMap {
+        SONARR__URL: 'http://sonarr:8989',
+        RADARR__URL: 'http://radarr:7878',
+      },
+      hostPathMappings: [
+        { name: 'config', host: '/data/general/config/doplarr', ctr: '/config' },
       ],
     }),
 
