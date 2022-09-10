@@ -17,23 +17,57 @@ local defaultEnvMap = {
 };
 
 local make_arr_app(namespace, cfg) = {
-  deployment: deployment.new(
-    name=cfg.name,
-    containers=[
-      container.new(name=cfg.name, image=cfg.image)
-      + container.securityContext.withAllowPrivilegeEscalation(false)
-      + container.withEnvMap(cfg.env)
-      + container.withPorts([containerPort.new(cfg.port)])
-      + container.withVolumeMounts([volumeMount.new(x.name, x.ctr) for x in cfg.hostPathMappings]),
-    ]
-  ) + deployment.spec.template.spec.withVolumes([
+  local _volumes = [
     volume.fromHostPath(x.name, x.host) + volume.hostPath.withType('Directory')
     for x in cfg.hostPathMappings
-  ]) + deployment.metadata.withNamespace(namespace),
+  ],
+  local _volumeMounts = [
+    volumeMount.new(x.name, x.ctr)
+    for x in cfg.hostPathMappings
+  ],
+  local _containers = [
+    container.new(name=cfg.name, image=cfg.image)
+    + container.securityContext.withAllowPrivilegeEscalation(false)
+    + container.withEnvMap(cfg.env)
+    + container.withPorts([containerPort.new(cfg.port)])
+    + container.withVolumeMounts(_volumeMounts),
+  ],
 
-  service: service.new(
-    cfg.name, { name: cfg.name }, [servicePort.new(cfg.port, cfg.port)]
-  ) + service.spec.withType('NodePort') + service.metadata.withNamespace(namespace),
+  deployment: deployment.new(name=cfg.name, containers=_containers)
+              + deployment.spec.template.spec.withVolumes(_volumes)
+              + deployment.spec.template.spec.withNodeName('tec')
+              + deployment.metadata.withNamespace(namespace),
+
+  local _podSelector = { name: cfg.name },
+  local _servicePorts = [servicePort.new(cfg.port, cfg.port)],
+
+  service: service.new(cfg.name, _podSelector, _servicePorts)
+           + service.spec.withType('NodePort')
+           + service.metadata.withNamespace(namespace),
+};
+
+// FIXME: Duplicates lots of code from `make_arr_app`
+local make_plex(namespace, cfg) = {
+  local _volumes = [
+    volume.fromHostPath(x.name, x.host) + volume.hostPath.withType('Directory')
+    for x in cfg.hostPathMappings
+  ] + [volume.fromEmptyDir('transcode') + volume.emptyDir.withMedium('Memory')],
+  local _volumeMounts = [
+    volumeMount.new(x.name, x.ctr)
+    for x in cfg.hostPathMappings
+  ] + [volumeMount.new('transcode', '/transcode')],
+  local _containers = [
+    container.new(name=cfg.name, image=cfg.image)
+    + container.securityContext.withAllowPrivilegeEscalation(false)
+    + container.withEnvMap(cfg.env)
+    + container.withVolumeMounts(_volumeMounts),
+  ],
+
+  deployment: deployment.new(name=cfg.name, containers=_containers)
+              + deployment.spec.template.spec.withVolumes(_volumes)
+              + deployment.spec.template.spec.withNodeName('tec')
+              + deployment.spec.template.spec.withHostNetwork(true)
+              + deployment.metadata.withNamespace(namespace),
 };
 
 {
@@ -95,6 +129,18 @@ local make_arr_app(namespace, cfg) = {
         { name: 'config', host: '/data/general/config/bazarr', ctr: '/config' },
         { name: 'tv', host: '/data/media/tv', ctr: '/tv' },
         { name: 'movies', host: '/data/media/movies', ctr: '/movies' },
+      ],
+    }),
+
+    plex: make_plex('media', {
+      name: 'plex',
+      image: 'lscr.io/linuxserver/plex:latest',
+      env: defaultEnvMap,
+      hostPathMappings: [
+        { name: 'config', host: '/data/general/config/plex', ctr: '/config' },
+        { name: 'tv', host: '/data/media/tv', ctr: '/tv' },
+        { name: 'movies', host: '/data/media/movies', ctr: '/movies' },
+        { name: 'audiobooks', host: '/data/media/audiobooks', ctr: '/audiobooks' },
       ],
     }),
   },
