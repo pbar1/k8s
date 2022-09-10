@@ -33,6 +33,7 @@ local make_arr_app(namespace, cfg) = {
   local _containers = [
     container.new(name=cfg.name, image=cfg.image)
     + container.securityContext.withAllowPrivilegeEscalation(false)
+    + container.withTerminationMessagePolicy('FallbackToLogsOnError')
     + container.withEnvMap(cfg.env)
     + container.withPorts([containerPort.new(cfg.port)])
     + container.withVolumeMounts(_volumeMounts),
@@ -64,6 +65,7 @@ local make_doplarr(namespace, cfg) = {
   local _containers = [
     container.new(name=cfg.name, image=cfg.image)
     + container.securityContext.withAllowPrivilegeEscalation(false)
+    + container.withTerminationMessagePolicy('FallbackToLogsOnError')
     + container.withEnvMap(cfg.env)
     + container.withEnvFrom(envFromSource.secretRef.withName('doplarr-env'))
     + container.withVolumeMounts(_volumeMounts),
@@ -88,6 +90,7 @@ local make_plex(namespace, cfg) = {
   local _containers = [
     container.new(name=cfg.name, image=cfg.image)
     + container.securityContext.withAllowPrivilegeEscalation(false)
+    + container.withTerminationMessagePolicy('FallbackToLogsOnError')
     + container.withEnvMap(cfg.env)
     + container.withVolumeMounts(_volumeMounts),
   ],
@@ -114,11 +117,13 @@ local make_transmission(namespace, cfg) = {
   local _containers = [
     container.new(name=cfg.name, image=cfg.image)
     + container.securityContext.withAllowPrivilegeEscalation(false)
+    + container.withTerminationMessagePolicy('FallbackToLogsOnError')
     + container.withEnvMap(cfg.env)
     + container.withPorts([containerPort.new(cfg.port)])
     + container.withVolumeMounts(_volumeMounts),
     container.new(name='pia-wireguard', image='ghcr.io/pbar1/pia-wireguard:latest')
     + container.securityContext.withPrivileged(true)
+    + container.withTerminationMessagePolicy('FallbackToLogsOnError')
     + container.withVolumeMounts([volumeMount.new('pia-shared', '/pia-shared')])
     + container.withEnvFrom(envFromSource.secretRef.withName('pia-credentials'))
     + container.withEnvMap({
@@ -129,6 +134,7 @@ local make_transmission(namespace, cfg) = {
     }),
     container.new('notify-port', image='ghcr.io/pbar1/transmission-pia-port:latest')
     + container.securityContext.withAllowPrivilegeEscalation(false)
+    + container.withTerminationMessagePolicy('FallbackToLogsOnError')
     + container.withVolumeMounts([volumeMount.new('pia-shared', '/pia-shared')]),
   ],
 
