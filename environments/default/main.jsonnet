@@ -40,6 +40,16 @@ local make_arr_app(namespace, cfg) = {
   media: {
     namespace: namespace.new('media'),
 
+    prowlarr: make_arr_app('media', {
+      name: 'prowlarr',
+      image: 'lscr.io/linuxserver/prowlarr:develop',
+      env: defaultEnvMap,
+      port: 9696,
+      hostPathMappings: [
+        { name: 'config', host: '/data/general/config/prowlarr', ctr: '/config' },
+      ],
+    }),
+
     sonarr: make_arr_app('media', {
       name: 'sonarr',
       image: 'lscr.io/linuxserver/sonarr:latest',
