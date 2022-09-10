@@ -1,6 +1,7 @@
+local tanka = import 'github.com/grafana/jsonnet-libs/tanka-util/main.libsonnet';
 local k = import 'k.libsonnet';
 
-// https://jsonnet-libs.github.io/k8s-libsonnet/
+// https://jsonnet-libs.github.io/k8s-libsonnet
 local namespace = k.core.v1.namespace;
 local deployment = k.apps.v1.deployment;
 local container = k.core.v1.container;
@@ -10,6 +11,9 @@ local volumeMount = k.core.v1.volumeMount;
 local service = k.core.v1.service;
 local servicePort = k.core.v1.servicePort;
 local envFromSource = k.core.v1.envFromSource;
+
+// https://tanka.dev/helm
+local helm = tanka.helm.new(std.thisFile);
 
 local defaultEnvMap = {
   TZ: 'America/Los_Angeles',
@@ -200,6 +204,15 @@ local make_transmission(namespace, cfg) = {
         { name: 'config', host: '/data/general/config/transmission', ctr: '/config' },
         { name: 'downloads', host: '/data/torrents/transmission', ctr: '/downloads' },
       ],
+    }),
+  },
+
+  certManager: {
+    namespace: namespace.new('cert-manager'),
+
+    certManager: helm.template('cert-manager', '../../charts/cert-manager', {
+      namespace: 'cert-manager',
+      values: { installCRDs: true },
     }),
   },
 }
