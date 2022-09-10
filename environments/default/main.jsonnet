@@ -63,5 +63,17 @@ local make_arr_app(namespace, cfg) = {
         { name: 'media', host: '/data/media/movies', ctr: '/movies' },
       ],
     }),
+
+    readarr: make_arr_app('media', {
+      name: 'readarr',
+      image: 'lscr.io/linuxserver/readarr:develop',
+      env: defaultEnvMap,
+      port: 8787,
+      hostPathMappings: [
+        { name: 'config', host: '/data/general/config/readarr-audiobooks', ctr: '/config' },
+        { name: 'downloads', host: '/data/torrents/transmission', ctr: '/downloads' },
+        { name: 'media', host: '/data/media/audiobooks', ctr: '/audiobooks' },
+      ],
+    }),
   },
 }
