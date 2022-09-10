@@ -85,5 +85,17 @@ local make_arr_app(namespace, cfg) = {
         { name: 'media', host: '/data/media/audiobooks', ctr: '/audiobooks' },
       ],
     }),
+
+    bazarr: make_arr_app('media', {
+      name: 'bazarr',
+      image: 'lscr.io/linuxserver/bazarr:latest',
+      env: defaultEnvMap,
+      port: 6767,
+      hostPathMappings: [
+        { name: 'config', host: '/data/general/config/bazarr', ctr: '/config' },
+        { name: 'tv', host: '/data/media/tv', ctr: '/tv' },
+        { name: 'movies', host: '/data/media/movies', ctr: '/movies' },
+      ],
+    }),
   },
 }
