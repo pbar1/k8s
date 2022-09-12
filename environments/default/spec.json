@@ -9,6 +9,7 @@
     "apiServer": "https://192.168.0.5:6443",
     "namespace": "default",
     "resourceDefaults": {},
-    "expectVersions": {}
+    "expectVersions": {},
+    "injectLabels": true
   }
 }

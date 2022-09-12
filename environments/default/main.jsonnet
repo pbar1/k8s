@@ -11,6 +11,10 @@ local volumeMount = k.core.v1.volumeMount;
 local service = k.core.v1.service;
 local servicePort = k.core.v1.servicePort;
 local envFromSource = k.core.v1.envFromSource;
+local ingress = k.networking.v1.ingress;
+local ingressTLS = k.networking.v1.ingressTLS;
+local ingressRule = k.networking.v1.ingressRule;
+local httpIngressPath = k.networking.v1.httpIngressPath;
 
 // https://tanka.dev/helm
 local helm = tanka.helm.new(std.thisFile);
@@ -149,6 +153,25 @@ local make_transmission(namespace, cfg) = {
   service: service.new(cfg.name, _podSelector, _servicePorts)
            + service.spec.withType('NodePort')
            + service.metadata.withNamespace(namespace),
+
+  /*
+  ingress: ingress.new(cfg.name)
+           + ingress.metadata.withAnnotations({
+             'cert-manager.io/cluster-issuer': 'letsencrypt-production',
+             'traefik.ingress.kubernetes.io/router.entrypoints': 'websecure',
+           })
+           + ingress.spec.withRules(
+             ingressRule.withHost(cfg.name + '.xnauts.net')
+             + ingressRule.http.withPaths(
+               httpIngressPath.withPath('/')
+               + httpIngressPath.withPathType('Prefix')
+               + httpIngressPath.backend.service.withName(cfg.name)
+               + httpIngressPath.backend.service.port.withNumber(cfg.port)
+             )
+           )
+           + ingress.spec.withTls(ingressTLS.withHosts(cfg.name + '.xnauts.net') + ingressTLS.withSecretName(cfg.name + '-tls'))
+           + ingress.metadata.withNamespace(namespace),
+           */
 };
 
 {
@@ -254,7 +277,72 @@ local make_transmission(namespace, cfg) = {
 
     certManager: helm.template('cert-manager', '../../charts/cert-manager', {
       namespace: 'cert-manager',
-      values: { installCRDs: true },
+      values: {
+        installCRDs: true,
+        extraArgs: [
+          '--dns01-recursive-nameservers-only',
+          '--dns01-recursive-nameservers=1.1.1.1:53,1.0.0.1:53',
+        ],
+      },
+    }),
+
+    // TODO: Abstract this and make `letsencrypt-staging`
+    letsEncryptProduction: {
+      apiVersion: 'cert-manager.io/v1',
+      kind: 'ClusterIssuer',
+      metadata: { name: 'letsencrypt-production', namespace: 'cert-manager' },
+      spec: { acme: {
+        server: 'https://acme-v02.api.letsencrypt.org/directory',
+        email: 'piercebartine@gmail.com',
+        privateKeySecretRef: { name: 'letsencrypt-production' },
+        solvers: [{
+          dns01: { cloudflare: {
+            email: 'piercebartine@gmail.com',
+            apiKeySecretRef: { name: 'cloudflare-api-key', key: 'api-key' },
+          } },
+          selector: { dnsZones: ['xnauts.net'] },
+        }],
+      } },
+    },
+  },
+
+  externalDns: {
+    namespace: namespace.new('external-dns'),
+    externalDns: helm.template('external-dns', '../../charts/external-dns', {
+      namespace: 'external-dns',
+      values: {
+        logLevel: 'debug',
+        triggerOnEventLoop: true,
+        policy: 'sync',
+        domainFilters: ['xnauts.net'],
+        provider: 'cloudflare',
+        // extraArgs: ['--cloudflare-proxied'],
+        env: [
+          { name: 'CF_API_EMAIL', value: 'piercebartine@gmail.com' },
+          { name: 'CF_API_KEY', valueFrom: { secretKeyRef: { name: 'cloudflare', key: 'CF_API_KEY' } } },
+        ],
+      },
     }),
   },
+
+  /*
+  monitoring: {
+    namespace: namespace.new('monitoring'),
+
+    prometheus: helm.template('prometheus', '../../charts/kube-prometheus-stack', {
+      namespace: 'monitoring',
+      values: {
+        alertmanager: { enabled: false },
+        grafana: {
+          defaultDashboardsTimezone: 'browser',
+          adminPassword: 'grafana',
+        },
+        persistence: { enabled: false },
+      },
+      prometheus: {
+        prometheusSpec: { retention: '30d' },
+      },
+    }),
+  },
+  */
 }
