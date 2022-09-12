@@ -1,0 +1,31 @@
+annotations:
+  artifacthub.io/changes: |
+    - kind: added
+      description: "Added support to configure dnsPolicy on the Helm chart deployment."
+    - kind: added
+      description: "Added ability to customise the deployment strategy."
+    - kind: changed
+      description: "Updated ExternalDNS version to v0.12.2."
+    - kind: changed
+      description: "Changed default deployment strategy to Recreate."
+apiVersion: v2
+appVersion: 0.12.2
+description: ExternalDNS synchronizes exposed Kubernetes Services and Ingresses with
+  DNS providers.
+home: https://github.com/kubernetes-sigs/external-dns/
+icon: https://github.com/kubernetes-sigs/external-dns/raw/master/img/external-dns.png
+keywords:
+- kubernetes
+- externaldns
+- external-dns
+- dns
+- service
+- ingress
+maintainers:
+- email: steve.hipwell@gmail.com
+  name: stevehipwell
+name: external-dns
+sources:
+- https://github.com/kubernetes-sigs/external-dns/
+type: application
+version: 1.11.0
