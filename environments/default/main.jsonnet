@@ -325,6 +325,14 @@ local make_transmission(namespace, cfg) = {
     }),
   },
 
+
+  // descheduler: {
+  //   descheduler: helm.template('descheduler', '../../charts/descheduler', {
+  //     namespace: 'kube-system',
+  //     values: { schedule: '*/2 * * * *' },
+  //   }),
+  // },
+
   /*
   monitoring: {
     namespace: namespace.new('monitoring'),
