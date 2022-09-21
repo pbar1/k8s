@@ -1,0 +1,15 @@
+{
+  "apiVersion": "tanka.dev/v1alpha1",
+  "kind": "Environment",
+  "metadata": {
+    "name": "environments/gitea",
+    "namespace": "environments/gitea/main.jsonnet"
+  },
+  "spec": {
+    "apiServer": "https://192.168.0.5:6443",
+    "namespace": "gitea",
+    "resourceDefaults": {},
+    "expectVersions": {},
+    "injectLabels": true
+  }
+}

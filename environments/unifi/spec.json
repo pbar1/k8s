@@ -1,0 +1,15 @@
+{
+  "apiVersion": "tanka.dev/v1alpha1",
+  "kind": "Environment",
+  "metadata": {
+    "name": "environments/unifi",
+    "namespace": "environments/unifi/main.jsonnet"
+  },
+  "spec": {
+    "apiServer": "https://192.168.0.5:6443",
+    "namespace": "unifi",
+    "resourceDefaults": {},
+    "expectVersions": {},
+    "injectLabels": true
+  }
+}

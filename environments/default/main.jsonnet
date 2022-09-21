@@ -174,6 +174,31 @@ local make_transmission(namespace, cfg) = {
            */
 };
 
+// FIXME: Duplicate code
+local make_unifi(namespace, cfg) = {
+  local _volumes = [
+    volume.fromHostPath(x.name, x.host) + volume.hostPath.withType('Directory')
+    for x in cfg.hostPathMappings
+  ],
+  local _volumeMounts = [
+    volumeMount.new(x.name, x.ctr)
+    for x in cfg.hostPathMappings
+  ],
+  local _containers = [
+    container.new(name=cfg.name, image=cfg.image)
+    + container.securityContext.withAllowPrivilegeEscalation(false)
+    + container.withTerminationMessagePolicy('FallbackToLogsOnError')
+    + container.withEnvMap(cfg.env)
+    + container.withVolumeMounts(_volumeMounts),
+  ],
+
+  deployment: deployment.new(name=cfg.name, containers=_containers)
+              + deployment.spec.template.spec.withVolumes(_volumes)
+              + deployment.spec.template.spec.withNodeName('tec')
+              + deployment.spec.template.spec.withHostNetwork(true)
+              + deployment.metadata.withNamespace(namespace),
+};
+
 {
   media: {
     namespace: namespace.new('media'),
@@ -353,4 +378,5 @@ local make_transmission(namespace, cfg) = {
     }),
   },
   */
+
 }
