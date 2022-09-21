@@ -1,0 +1,29 @@
+annotations:
+  artifacthub.io/changes: |-
+    - kind: changed
+      description: Upgraded `common` chart dependency to version 4.5.2
+apiVersion: v2
+appVersion: v7.1.68
+dependencies:
+- name: common
+  repository: https://library-charts.k8s-at-home.com
+  version: 4.5.2
+- condition: mongodb.enabled
+  name: mongodb
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.1.22
+description: Ubiquiti Network's Unifi Controller
+home: https://github.com/k8s-at-home/charts/tree/master/charts/stable/unifi
+icon: https://prd-www-cdn.ubnt.com/static/favicon-152.png
+keywords:
+- ubiquiti
+- unifi
+maintainers:
+- email: jeff@billimek.com
+  name: billimek
+- email: mike@quadra-tec.net
+  name: mcronce
+name: unifi
+sources:
+- https://github.com/jacobalberty/unifi-docker
+version: 5.1.2

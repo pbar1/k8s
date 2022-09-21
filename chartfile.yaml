@@ -10,6 +10,12 @@ repositories:
   url: https://kubernetes-sigs.github.io/external-dns/
 - name: descheduler
   url: https://kubernetes-sigs.github.io/descheduler/
+- name: gitea
+  url: https://dl.gitea.io/charts/
+- name: mvisonneau
+  url: https://charts.visonneau.fr
+- name: k8sathome
+  url: https://k8s-at-home.com/charts
 requires:
 - chart: jetstack/cert-manager
   version: 1.9.1
@@ -19,4 +25,10 @@ requires:
   version: 1.11.0
 - chart: descheduler/descheduler
   version: 0.24.1
+- chart: gitea/gitea
+  version: 6.0.1
+- chart: mvisonneau/tailscale-relay
+  version: 0.1.7
+- chart: k8sathome/unifi
+  version: 5.1.2
 version: 1
